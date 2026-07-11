@@ -33,5 +33,25 @@ export const ofertasApi = {
   getHealth: async () => {
     const response = await apiClient.get('/health');
     return response.data;
+  },
+
+  scrapeMercadona: async () => {
+    const response = await apiClient.post('/api/scrape/mercadona');
+    return response.data;
+  },
+
+  scrapeCarrefour: async () => {
+    const response = await apiClient.post('/api/scrape/carrefour');
+    return response.data;
+  },
+
+  scrapeDia: async () => {
+    const response = await apiClient.post('/api/scrape/dia');
+    return response.data;
+  },
+
+  scrapeAll: async () => {
+    const response = await apiClient.post('/api/scrape/all');
+    return response.data;
   }
 };

@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { OfertaFilters } from '../types';
 import { ofertasApi } from '../services/api';
+import FiltrosOfertas from '../components/FiltrosOfertas';
+import OfertaCard from '../components/OfertaCard';
 
 function OfertasPage() {
   const [ofertas, setOfertas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [filtros, setFiltros] = useState<OfertaFilters>({});
+  const [scrapeMsg, setScrapeMsg] = useState('');
+  const [scrapeLoading, setScrapeLoading] = useState(false);
   const navigate = useNavigate();
 
   const supermercados = ['Mercadona', 'Lidl', 'Aldi', 'Dia', 'Carrefour', 'Alcampo'];
@@ -29,6 +33,35 @@ function OfertasPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleScrapeMercadona = async () => {
+    setScrapeLoading(true);
+    setScrapeMsg('');
+    try {
+      const res = await ofertasApi.scrapeMercadona();
+      setScrapeMsg(`✅ ${res.mensaje || 'Mercadona scrapeado'}`);
+      fetchOfertas(filtros);
+    } catch (err: any) {
+      setScrapeMsg(`❌ Error: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setScrapeLoading(false);
+    }
+  };
+
+  const handleScrapeAll = async () => {
+    setScrapeLoading(true);
+    setScrapeMsg('');
+    try {
+      const resultados = await ofertasApi.scrapeAll();
+      const msgs = Object.entries(resultados).map(([s, r]) => `${s}: ${r}`);
+      setScrapeMsg(`✅ ${msgs.join(' | ')}`);
+      fetchOfertas(filtros);
+    } catch (err: any) {
+      setScrapeMsg(`❌ Error: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setScrapeLoading(false);
     }
   };
 
@@ -66,6 +99,26 @@ function OfertasPage() {
         >
           Generar Menú Semanal
         </button>
+      </div>
+
+      <div className="flex flex-wrap gap-3 items-center">
+        <button
+          onClick={handleScrapeMercadona}
+          disabled={scrapeLoading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {scrapeLoading ? 'Scrapeando...' : '🔄 Scrapear Mercadona'}
+        </button>
+        <button
+          onClick={handleScrapeAll}
+          disabled={scrapeLoading}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+        >
+          {scrapeLoading ? 'Scrapeando...' : '🔄 Scrapear Todos'}
+        </button>
+        {scrapeMsg && (
+          <span className="text-sm text-gray-700 ml-2">{scrapeMsg}</span>
+        )}
       </div>
 
       <FiltrosOfertas onFilter={handleFilterChange} supermercados={supermercados} categorias={categorias} />
